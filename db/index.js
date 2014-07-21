@@ -8,10 +8,11 @@ var Invoice = Invoice.define('Invoice', {
     timestamp: { type: Date,  default: Date.now },
     address: {type: String, length:34},
     amountRemaining: { type: Number },
-    amountPaid: {type: Number  },
+    amountPaid: {type: Number, default: 0},
     totalAmount: {type: Number },
     qr: {type: String},
-    txids: {type: Array}
+    txids: {type: Array},
+    invoiceStatus: {type: String, default: 'UNPAID'}
 });
 
 module.exports = { 

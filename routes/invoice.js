@@ -27,11 +27,16 @@ module.exports = {
 	updateInvoice: function(req, res){
 		var txid = req.body.txid || null;
 		if(!txid) res.json({error:'no txid specified'});
-                async.waterfall([
+                if(req.connection.remoteAddress != '127.0.0.1'){
+			res.status(403);
+			res.json({error:'Unauthorized Access'});
+		}
+
+		async.waterfall([
                         function(callback){
                                 bitclient.getTransaction(txid, function(err, transaction){
                                         if(err) res.json({error: "No such transaction found"});
-                                        callback(null,transaction);
+					 callback(null,transaction);
                                 });
                         },
                         function(transaction, callback){
@@ -40,13 +45,14 @@ module.exports = {
                                 var category = transaction.details[0].category;
                                 var amountReceived = transaction.details[0].amount;
                                 if( (category == "received") && (amountReceived > 0) )
-                                        
+                                        console.log( 'break2!')
                                         models.Invoice.find(address, function(err, invoice){
 						invoice.amountRemaining = invoice.amountRemaining - amountReceived;
                                                	invoice.qr = 'http://chart.apis.google.com/chart?chld=L|1&choe=ISO-8859-1&chs=300x300&cht=qr&chl=bitcoin:'+address+'?amount='+invoice.amountRemaining+'%26label='+invoice.title+'%26message='+invoice.note;
-						invoice.amountPaid += amountReceived;
+						invoice.amountPaid = invoice.amountPaid + amountReceived;
 						invoice.txids.unshift(txid);
-                                                invoice.save();
+                                                if(invoice.amountRemaining == 0) invoice.invoiceStatus = "PAID";
+						invoice.save();
 						res.status(200);
 						res.json(invoice);
                                         });
