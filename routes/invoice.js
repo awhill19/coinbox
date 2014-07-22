@@ -5,9 +5,10 @@ var models = require('../db/');
 var isValidAddress = require('bitcoin-address');
 var async = require('async');
 module.exports = {
-
+	
 	createInvoice : function(req,res){
-		bitclient.getNewAddress(function(err,address){
+
+	bitclient.getNewAddress(function(err,address){
 			var qrUrl = 'http://chart.apis.google.com/chart?chld=L|1&choe=ISO-8859-1&chs=300x300&cht=qr&chl=bitcoin:'+address+'?amount='+req.body.amount+'%26label='+req.body.title+'%26message='+req.body.message;
 			var invoiceData = {
 			 	id : address,
@@ -20,10 +21,11 @@ module.exports = {
                         var newInvoice = models.Invoice.create(invoiceData);
 			newInvoice.save();
                         res.status(200);
-                        res.redirect(('/invoice/'+address+'/'));
+                        res.json(newInvoice);
 		});		
 
 	},
+
 	updateInvoice: function(req, res){
 		var txid = req.body.txid || null;
 		if(!txid) res.json({error:'no txid specified'});
@@ -61,9 +63,8 @@ module.exports = {
 	},
 	
 	getInvoice : function(req,res){
-
+		console.log(req.body, req.params);
 		var Address = req.params.address;
-		
 		if(isValidAddress.validate(Address, 'testnet')){	
 			models.Invoice.find(Address, function(err, invoice){
 				if(err){
